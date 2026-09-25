@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v1.1 | [`v1.1`](https://github.com/chainguard-actions/nanzm-get-time-action/tree/v1.1) | [`5fb6a88`](https://github.com/nanzm/get-time-action/commit/5fb6a88787f272aeb246a10ebb8fabeb5f3c7b9c) |
+| v2.0 | [`v2.0`](https://github.com/chainguard-actions/nanzm-get-time-action/tree/v2.0) | [`887e4db`](https://github.com/nanzm/get-time-action/commit/887e4db9af58ebae64998b7105921b816af77977) |
 
 ## Privacy
 
