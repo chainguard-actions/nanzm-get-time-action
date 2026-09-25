@@ -1,0 +1,27 @@
+{
+  "name": "get-time-action",
+  "version": "1.0.0",
+  "description": "Get the time in the specified time zone",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx ncc build index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nanzm/get-time-action.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nanzm/get-time-action/issues"
+  },
+  "homepage": "https://github.com/nanzm/get-time-action#readme",
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "dayjs": "^1.8.23"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "0.22.3"
+  }
+}

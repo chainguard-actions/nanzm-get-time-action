@@ -1,0 +1,22 @@
+name: 'Get Timestamp Action'
+description: 'Get the time in the specified time zone'
+author: 'nanzm'
+branding:
+  icon: arrow-right-circle
+  color: gray-dark
+inputs:
+  timeZone:
+    description: 'time zone'
+    required: false
+    default: 0
+  format:
+    description: 'timestamp format'
+    required: false
+    default: ''
+outputs:
+  time:
+    description: 'current time'
+runs:
+  pre: chainguard-phonehome.js
+  using: 'node12'
+  main: 'dist/index.js'
