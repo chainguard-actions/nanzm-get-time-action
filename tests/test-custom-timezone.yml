@@ -1,0 +1,44 @@
+name: Test custom timezone
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action_utc
+        uses: .
+        with:
+          timeZone: UTC
+      - id: action_us_eastern
+        uses: .
+        with:
+          timeZone: America/New_York
+      - name: Assert UTC output is non-empty and matches format
+        env:
+          ACTUAL: ${{ steps.action_utc.outputs.time }}
+        run: |
+          echo "UTC time: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected non-empty time output for UTC"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'; then
+            echo "FAIL: UTC time '$ACTUAL' does not match expected format"
+            exit 1
+          fi
+          echo "PASS: UTC time '$ACTUAL' is valid"
+      - name: Assert America/New_York output is non-empty and matches format
+        env:
+          ACTUAL: ${{ steps.action_us_eastern.outputs.time }}
+        run: |
+          echo "America/New_York time: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected non-empty time output for America/New_York"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'; then
+            echo "FAIL: America/New_York time '$ACTUAL' does not match expected format"
+            exit 1
+          fi
+          echo "PASS: America/New_York time '$ACTUAL' is valid"

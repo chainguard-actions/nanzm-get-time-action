@@ -1,0 +1,65 @@
+name: Test custom format
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action_date_only
+        uses: .
+        with:
+          timeZone: UTC
+          format: "YYYY-MM-DD"
+      - id: action_time_only
+        uses: .
+        with:
+          timeZone: UTC
+          format: "HH:mm:ss"
+      - id: action_custom
+        uses: .
+        with:
+          timeZone: UTC
+          format: "YYYY/MM/DD"
+      - name: Assert date-only format output
+        env:
+          ACTUAL: ${{ steps.action_date_only.outputs.time }}
+        run: |
+          echo "date-only: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected non-empty time output for date-only format"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+            echo "FAIL: date-only output '$ACTUAL' does not match YYYY-MM-DD"
+            exit 1
+          fi
+          echo "PASS: date-only output '$ACTUAL' is valid"
+      - name: Assert time-only format output
+        env:
+          ACTUAL: ${{ steps.action_time_only.outputs.time }}
+        run: |
+          echo "time-only: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected non-empty time output for time-only format"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -qE '^[0-9]{2}:[0-9]{2}:[0-9]{2}$'; then
+            echo "FAIL: time-only output '$ACTUAL' does not match HH:mm:ss"
+            exit 1
+          fi
+          echo "PASS: time-only output '$ACTUAL' is valid"
+      - name: Assert custom slash-separated date format output
+        env:
+          ACTUAL: ${{ steps.action_custom.outputs.time }}
+        run: |
+          echo "custom format: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected non-empty time output for custom format"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -qE '^[0-9]{4}/[0-9]{2}/[0-9]{2}$'; then
+            echo "FAIL: custom format output '$ACTUAL' does not match YYYY/MM/DD"
+            exit 1
+          fi
+          echo "PASS: custom format output '$ACTUAL' is valid"

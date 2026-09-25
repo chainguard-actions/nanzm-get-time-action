@@ -1,14 +1,40 @@
-# nanzm/get-time-action
+# Get Time Action
 
 Get the time in the specified time zone
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/nanzm/get-time-action](https://github.com/nanzm/get-time-action).
+## Example usage
 
-## Versions
+```yaml
+steps:
+  - name: Get Time
+    id: time
+    uses: nanzm/get-time-action@master
+    with:
+      timeZone: UTC+8
+      format: 'YYYY-MM-DD-HH-mm-ss'
+  - name: Usage
+    env:
+      TIME: "${{ steps.time.outputs.time }}"
+    run: |
+      echo $TIME
+```
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v1.1 | [`v1.1`](https://github.com/chainguard-actions/nanzm-get-time-action/tree/v1.1) | [`5fb6a88`](https://github.com/nanzm/get-time-action/commit/5fb6a88787f272aeb246a10ebb8fabeb5f3c7b9c) |
+## Inputs
+
+| Parameter  | Required | Info                                                         |
+| ---------- | -------- | ------------------------------------------------------------ |
+| `timeZone` | `false`  | time Zone  Default: UTC                                        |
+| `format`   | `false`  | timestamp format string  Default:                                   |
+
+## Outputs
+
+| Parameter   | Info                                                         |
+| ---------- | ------------------------------------------------------------ |
+| `time`   | time in the specified time zone|
+
+## License
+
+[MIT](LICENSE)
 
 ## Privacy
 
